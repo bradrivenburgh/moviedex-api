@@ -52,7 +52,6 @@ function handleGetMovie(req, res) {
       movie.avg_vote >= Number(avg_vote));  
   }
 
-
   // Send back results
   res.json(response);
 }
