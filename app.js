@@ -35,7 +35,7 @@ function filterGenreOrCountry(response, genre = null, country = null) {
 /**/
 
 function filterByParam(response, obj) {
-  return response = response.filter(movie => {
+  return filteredResponse = response.filter(movie => {
     let prop = Object.keys(obj)[0];
     return movie[prop].toLowerCase().includes(obj[prop].toLowerCase());
   });
@@ -43,33 +43,51 @@ function filterByParam(response, obj) {
 
 function handleGetMovie(req, res) {
   // Response without query params
-  let response = MOVIEDEX;
- 
-  // Retrieve query values
-  if (req.query) {
-    
-  }
-  const { genre, country, avg_vote } = req.query;
+  const response = MOVIEDEX;
+  let filteredResponse;
 
-  // Filter by genre if it is provided; make case insensitive
-  if (genre) {
-    filterByParam(response, {genre}); // {genre:value}
-    // response = response.filter(movie => 
-    //   movie.genre.toLowerCase().includes(genre.toLowerCase()));
+  // Ensure params are valid 
+  let validateParams = [];
+  validateParams = Object.keys(req.query).map(param => 
+    ['genre', 'country', 'avg_vote'].includes(param.toLowerCase())
+  );
+
+  if (validateParams.includes(false)) {
+    console.log('One of your params is invalid')
+  } else {
+    // Retrieve query values
+    const { genre, country, avg_vote } = req.query;
+    filterByParam(response, {genre});
+    filterByParam(response, {country});
+    if (avg_vote) {
+      filteredResponse = response.filter(movie => 
+        movie.avg_vote >= Number(avg_vote));  
+    }  
   }
 
-  if (country) {
-    response = response.filter(movie => 
-      movie.country.toLowerCase().includes(country.toLowerCase()));
-  }
+  // Filter if query params are present
+  
+  // const { genre, country, avg_vote } = req.query;
 
-  if (avg_vote) {
-    response = response.filter(movie => 
-      movie.avg_vote >= Number(avg_vote));  
-  }
+  // // Filter by genre if it is provided; make case insensitive
+  // if (genre) {
+  //   filterByParam(response, {genre}); // {genre:value}
+  //   // response = response.filter(movie => 
+  //   //   movie.genre.toLowerCase().includes(genre.toLowerCase()));
+  // }
+
+  // if (country) {
+  //   response = response.filter(movie => 
+  //     movie.country.toLowerCase().includes(country.toLowerCase()));
+  // }
+
+  // if (avg_vote) {
+  //   response = response.filter(movie => 
+  //     movie.avg_vote >= Number(avg_vote));  
+  // }
 
   // Send back results
-  res.json(response);
+  res.json(filteredResponse);
 }
 
 app.get('/movie', handleGetMovie);
