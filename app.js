@@ -53,7 +53,7 @@ function handleGetMovie(req, res) {
 
   // Send 401 error if there is a problem with one of the params
   if (validateParams.includes(false)) {
-    res
+    return res
       .status(400)
       .json({
         error: 'Bad request: One or more of your query parameters is invalid.'

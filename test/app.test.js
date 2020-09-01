@@ -1,3 +1,4 @@
+require('dotenv').config()
 const { expect } = require('chai');
 const supertest = require('supertest');
 const app = require('../app');
@@ -12,6 +13,8 @@ describe('GET /movie', () => {
   it('should return 400 if query params are invalid', () => {
     return supertest(app)
       .get('/movie')
+      .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+      .query({mistake: 'mistake'})
       .expect(400, 
         { error: 'Bad request: One or more of your query parameters is invalid.' });
   });
