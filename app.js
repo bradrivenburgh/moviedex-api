@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
 const MOVIEDEX = require('./moviedex.json');
+const { query } = require('express');
 
 const app = express();
 app.use(morgan('dev'));
@@ -14,8 +15,6 @@ app.use(function validateToken(req, res, next) {
   const authToken = req.get('Authorization');
   const apiToken = process.env.API_TOKEN;
 
-  console.log('Now validating bearer token...');
-
   if (!authToken || authToken.split(' ')[1] !== apiToken) {
     return res.status(401).json({ error: 'Unauthorized request' });
   }
@@ -23,26 +22,27 @@ app.use(function validateToken(req, res, next) {
   next();
 });
 
-/**
-function filterGenreOrCountry(response, genre = null, country = null) {
-  return response = response.filter(movie =>{
-    if(genre){
-      return movie.genre.toLowerCase().includes(genre.toLowerCase())
-    } else if(country){
-      return movie.country.toLowerCase().includes(country.toLowerCase())
+function filterByParam(response, queryParams) {
+  // Assign response to new variable to avoid mutating original data
+  filteredResponse = response;
+
+  // Convert the query object to an array. Loop over the array  
+  // and conduct the appropriate filtering operation for each param
+  Object.keys(queryParams).forEach(param => {
+    if (param.toLowerCase() !== 'avg_vote') {
+      filteredResponse = filteredResponse.filter(movie => 
+        movie[param].toLowerCase().includes(queryParams[param].toLowerCase())
+      );    
+    } else if (param.toLowerCase() === 'avg_vote') {
+      filteredResponse = filteredResponse.filter(movie => 
+        movie[param] >= Number(queryParams[param]));  
     }
   });
-/**/
 
-function filterByParam(response, obj) {
-  return filteredResponse = response.filter(movie => {
-    let prop = Object.keys(obj)[0];
-    return movie[prop].toLowerCase().includes(obj[prop].toLowerCase());
-  });
+  return filteredResponse;
 }
 
 function handleGetMovie(req, res) {
-  // Response without query params
   const response = MOVIEDEX;
   let filteredResponse;
 
@@ -52,41 +52,26 @@ function handleGetMovie(req, res) {
     ['genre', 'country', 'avg_vote'].includes(param.toLowerCase())
   );
 
+  // Send 401 error if there is a problem with one of the params
   if (validateParams.includes(false)) {
-    console.log('One of your params is invalid')
-  } else {
-    // Retrieve query values
-    const { genre, country, avg_vote } = req.query;
-    filterByParam(response, {genre});
-    filterByParam(response, {country});
-    if (avg_vote) {
-      filteredResponse = response.filter(movie => 
-        movie.avg_vote >= Number(avg_vote));  
-    }  
+    res
+      .status(400)
+      .json({
+        error: 'Bad request: One or more of your query parameters is invalid.'
+      })
   }
 
-  // Filter if query params are present
+  // Filter response object if query params are valid
+  filteredResponse = filterByParam(response, req.query);
+
+  // Notify client if there are no movies that satisfy the search criteria
+  if (!filteredResponse.length) {
+    res.json({
+      no_match: 'There are no movies in the database that satisfy your search criteria.'
+    })
+  }
   
-  // const { genre, country, avg_vote } = req.query;
-
-  // // Filter by genre if it is provided; make case insensitive
-  // if (genre) {
-  //   filterByParam(response, {genre}); // {genre:value}
-  //   // response = response.filter(movie => 
-  //   //   movie.genre.toLowerCase().includes(genre.toLowerCase()));
-  // }
-
-  // if (country) {
-  //   response = response.filter(movie => 
-  //     movie.country.toLowerCase().includes(country.toLowerCase()));
-  // }
-
-  // if (avg_vote) {
-  //   response = response.filter(movie => 
-  //     movie.avg_vote >= Number(avg_vote));  
-  // }
-
-  // Send back results
+  // Send back results as JSON
   res.json(filteredResponse);
 }
 
