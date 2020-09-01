@@ -4,7 +4,6 @@ const morgan = require('morgan');
 const cors = require('cors');
 const helmet = require('helmet');
 const MOVIEDEX = require('./moviedex.json');
-const { query } = require('express');
 
 const app = express();
 app.use(morgan('dev'));
