@@ -46,6 +46,9 @@ function handleGetMovie(req, res) {
   let response = MOVIEDEX;
  
   // Retrieve query values
+  if (req.query) {
+    
+  }
   const { genre, country, avg_vote } = req.query;
 
   // Filter by genre if it is provided; make case insensitive
