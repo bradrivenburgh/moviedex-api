@@ -23,10 +23,23 @@ app.use(function validateToken(req, res, next) {
   next();
 });
 
-// function filterHelper(response, param) {
-//   return response = response.filter(movie => 
-//     movie.param.toLowerCase().includes(param.toLowerCase()));
-// }
+/**
+function filterGenreOrCountry(response, genre = null, country = null) {
+  return response = response.filter(movie =>{
+    if(genre){
+      return movie.genre.toLowerCase().includes(genre.toLowerCase())
+    } else if(country){
+      return movie.country.toLowerCase().includes(country.toLowerCase())
+    }
+  });
+/**/
+
+function filterByParam(response, obj) {
+  return response = response.filter(movie => {
+    let prop = Object.keys(obj)[0];
+    return movie[prop].toLowerCase().includes(obj[prop].toLowerCase());
+  });
+}
 
 function handleGetMovie(req, res) {
   // Response without query params
@@ -37,9 +50,9 @@ function handleGetMovie(req, res) {
 
   // Filter by genre if it is provided; make case insensitive
   if (genre) {
-    //filterHelper(response, genre);
-    response = response.filter(movie => 
-      movie.genre.toLowerCase().includes(genre.toLowerCase()));
+    filterByParam(response, {genre}); // {genre:value}
+    // response = response.filter(movie => 
+    //   movie.genre.toLowerCase().includes(genre.toLowerCase()));
   }
 
   if (country) {
